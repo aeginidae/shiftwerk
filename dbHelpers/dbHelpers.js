@@ -3,7 +3,7 @@
 /* eslint-disable camelcase */
 // const sequelize = require('sequelize');
 const geolib = require('geolib');
-const db = require('../db/index');
+const db = require('../db');
 
 /**
  * Filters any number of shifts by distance from werker
@@ -730,3 +730,5 @@ module.exports = {
   getFavorites,
   getAllWerkersOnShift,
 };
+
+module.exports.models = db.models;
