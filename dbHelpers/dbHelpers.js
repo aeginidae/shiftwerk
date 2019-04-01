@@ -94,7 +94,10 @@ const bulkAddCertificationToWerker = (werker, certifications) => Promise.all(cer
  */
 const bulkAddPositionToWerker = (werker, positions) => Promise.all(positions
   .map(position => db.models.Position.upsert(position, { returning: true })
-    .spread(newPosition => newPosition.addWerker(werker))))
+    .spread((newPosition) => {
+      console.log(newPosition);
+      newPosition.addWerker(werker);
+    })))
   .then(() => werker);
 
 /**
@@ -138,12 +141,11 @@ const addWerker = (info) => {
       }
       return new Error('Something went wrong');
     })
-    .spread(newWerker => info.certifications
-      ? bulkAddCertificationToWerker(newWerker, info.certifications)
-      : new Promise(resolve => resolve(newWerker))
-        .then(() => info.positions
-          ? bulkAddPositionToWerker(newWerker, info.positions)
-          : new Promise(resolve => resolve(newWerker))));
+    .spread(newWerker => Promise.all([
+      bulkAddCertificationToWerker(newWerker, info.certifications),
+      bulkAddPositionToWerker(newWerker, info.positions),
+    ]))
+    .then(([newWerker]) => newWerker);
 };
 
 /**
