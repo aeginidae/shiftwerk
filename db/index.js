@@ -13,7 +13,9 @@ const Sequelize = require('sequelize');
 //   },
 // });
 
-const sequelize = new Sequelize(`postgres://${process.env.DBUSERNAME}:${process.env.DBPASSWORD}@${process.env.DBHOST}:5432/postgres`);
+const sequelize = new Sequelize(`postgres://${process.env.DBUSERNAME}:${process.env.DBPASSWORD}@${process.env.DBHOST}:5432/${process.env.DBNAME}`, {
+  logging: false,
+});
 // change made
 const models = {
   Shift: sequelize.import('./Shift'),
@@ -42,7 +44,6 @@ sequelize.authenticate()
     console.log(`Connected to DB on ${process.env.DBHOST}`);
   })
   .catch(err => console.log(`Unable to connect because ${err}`));
-
-sequelize.sync().then(() => { console.log('created'); });
+sequelize.sync();
 module.exports.models = models;
 module.exports.sequelize = sequelize;
