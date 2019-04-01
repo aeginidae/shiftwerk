@@ -84,7 +84,6 @@ describe('Database', () => {
     ].map(model => dbHelpers.models[model].destroy({
       truncate: true,
       cascade: true,
-      logging: true,
     })));
   });
   describe('Werker', () => {
@@ -170,7 +169,44 @@ describe('Database', () => {
               });
             });
           });
-          test('positions', async () => {
+          describe('positions', () => {
+            let positions;
+            let position;
+            let WerkerPosition;
+            beforeAll(async () => {
+              positions = await dbHelpers.models.Position.findAll({
+                include: [
+                  {
+                    model: dbHelpers.models.Werker,
+                    through: {
+                      attributes: ['WerkerId', 'PositionId'],
+                      where: {
+                        WerkerId: newWerker.id,
+                      },
+                    },
+                  },
+                ],
+              });
+              [position] = positions;
+              WerkerPosition = position.Werkers[0].WerkerPosition.dataValues;
+            });
+            test('should exist', () => {
+              expect(positions).toBeDefined();
+            });
+            test('should have two positions', () => {
+              expect(positions.length).toEqual(2);
+            });
+            test('should have attribute position', () => {
+              expect(position.position).toBe('server');
+            });
+            describe('WerkerPosition', () => {
+              test('should share WerkerId with werker', () => {
+                expect(WerkerPosition.WerkerId).toEqual(newWerker.id);
+              });
+              test('should share PositionId with position', () => {
+                expect(WerkerPosition.PositionId).toEqual(position.id);
+              });
+            });
           });
         });
       });
