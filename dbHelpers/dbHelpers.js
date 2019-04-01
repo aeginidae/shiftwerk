@@ -95,7 +95,6 @@ const bulkAddCertificationToWerker = (werker, certifications) => Promise.all(cer
 const bulkAddPositionToWerker = (werker, positions) => Promise.all(positions
   .map(position => db.models.Position.upsert(position, { returning: true })
     .spread((newPosition) => {
-      console.log(newPosition);
       newPosition.addWerker(werker);
     })))
   .then(() => werker);
@@ -173,12 +172,15 @@ const updateWerker = (werkerId, info) => db.models.Werker.update(info, {
   },
   returning: true,
 })
-  .spread(updatedWerker => info.certifications
-    ? bulkAddCertificationToWerker(updatedWerker, info.certifications)
-    : new Promise(resolve => resolve(updatedWerker))
-      .then(() => info.positions
-        ? bulkAddPositionToWerker(updatedWerker, info.positions)
-        : new Promise(resolve => resolve(updatedWerker))));
+  // need to dig into returned data to get at the actual werker
+  .then(([count, [{ dataValues }]]) => {
+    const updatedWerker = dataValues;
+    return Promise.all([
+      bulkAddCertificationToWerker(updatedWerker, info.certifications),
+      bulkAddPositionToWerker(updatedWerker, info.positions),
+    ]);
+  })
+  .then(([updatedWerker]) => updatedWerker);
 
 /**
  * updates Maker entry in DB
@@ -426,7 +428,6 @@ const createShift = ({
 const applyOrInviteForShift = (shiftId, werkerId, positionName, inviteOrApply) => db.sequelize.query(`
 SELECT sp.id FROM "ShiftPositions" sp INNER JOIN "Positions" p ON p.id=sp."PositionId" INNER JOIN "Shifts" s ON s.id=sp."ShiftId" WHERE p.position='${positionName}' AND s.id=${shiftId}`)
   .spread((shiftPositions) => {
-    console.log(shiftPositions);
     return db.sequelize.query(`
 INSERT INTO "InviteApplies" ("WerkerId",
 "ShiftPositionId", 
