@@ -180,7 +180,8 @@ const updateWerker = (werkerId, info) => db.models.Werker.update(info, {
       bulkAddPositionToWerker(updatedWerker, info.positions),
     ]);
   })
-  .then(([updatedWerker]) => updatedWerker);
+  .then(([updatedWerker]) => updatedWerker)
+  .catch(err => console.error(err));
 
 /**
  * updates Maker entry in DB
