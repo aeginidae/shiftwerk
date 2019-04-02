@@ -370,22 +370,6 @@ const getFavorites = (id, type) => {
 // SHIFT
 
 /**
- * Adds an array of items to Positions table or updates if they exist
- * @param {Object} positions - key: position, val: string, key: payment_amnt, val: Number
- */
-const bulkAddNewPositionsToShift = (shift, positions) => Promise.all(positions
-  .map(position => db.models.Position.upsert(position, { returning: true })
-    .then(([newPosition, updated]) => db.models.ShiftPosition.upsert({
-      ShiftId: shift.id,
-      PositionId: newPosition.id,
-      payment_amnt: position.payment_amnt,
-      payment_type: position.payment_type,
-    }, {
-      returning: true,
-    }))))
-  .then(() => shift);
-
-/**
  * Function used to create a new shift
  * @param {string} name - the name of the shift
  * @param {date} start - the start date of the shift
@@ -406,7 +390,7 @@ const createShift = ({
   address,
   description,
   positions,
-}) => Promise.all([db.models.Shift.create({
+}) => db.models.Shift.create({
   MakerId,
   name,
   start,
@@ -415,19 +399,18 @@ const createShift = ({
   long,
   address,
   description,
-}), Promise.all(positions.map(position => db.models.Position.upsert(
-  position,
-  {
-    returning: true,
-  },
-)))])
-  .then(([newShift, newPositions]) => Promise.all(newPositions
-    .map((newPosition, index) => newShift.addPosition(newPosition[0], {
-      through: {
-        payment_amnt: positions[index].payment_amnt,
-        payment_type: positions[index].payment_type,
-      },
-    })))
+})
+  .then(newShift => Promise.all(positions.map((position, index) => db.models.Position.upsert(
+    position,
+    {
+      returning: true,
+    },
+  ).spread(newPosition => newShift.addPosition(newPosition, {
+    through: {
+      payment_amnt: positions[index].payment_amnt,
+      payment_type: positions[index].payment_type,
+    },
+  }))))
     .then(() => newShift));
 
 /**
@@ -728,7 +711,6 @@ module.exports = {
   getShiftsById,
   getAllShifts,
   deleteShift,
-  bulkAddNewPositionsToShift,
   addWerker,
   bulkAddCertificationToWerker,
   bulkAddPositionToWerker,
