@@ -317,14 +317,31 @@ describe('Database', () => {
         }));
       });
       describe('ShiftPositions', () => {
+        let position;
+        let shiftPosition;
         test('should create new Positions', async () => {
-          const position = await dbHelpers.models.Position.findOne({
+          position = await dbHelpers.models.Position.findOne({
             where: {
               position: examples.Shift.positions[0].position,
             },
           });
           expect(position).toBeDefined();
           expect(position).toBeInstanceOf(dbHelpers.models.Position);
+        });
+        test('should create new ShiftPositions', async () => {
+          shiftPosition = await dbHelpers.models.ShiftPosition.findOne({
+            where: {
+              ShiftId: newShift.id,
+            },
+          });
+          expect(shiftPosition).toBeInstanceOf(dbHelpers.models.ShiftPosition);
+        });
+        test('should have attribute "filled" with default value false', () => {
+          expect(shiftPosition.get('filled')).toBe(false);
+        });
+        test('should have attributes "payment_type" and "payment_amnt"', () => {
+          expect(shiftPosition.get('payment_type')).toBe(examples.Shift.positions[0].payment_type);
+          expect(parseInt(shiftPosition.get('payment_amnt'), 10)).toBe(examples.Shift.positions[0].payment_amnt);
         });
       });
     });
