@@ -98,9 +98,10 @@ describe('Database', () => {
         expect(dbHelpers.addWerker).toBeInstanceOf(Function);
       });
       test('should create a werker', async () => {
-        const { dataValues } = await dbHelpers.addWerker(examples.Werker);
-        newWerker = dataValues;
+        const werker = await dbHelpers.addWerker(examples.Werker);
+        newWerker = werker.dataValues;
         expect(newWerker).toBeDefined();
+        expect(werker).toBeInstanceOf(dbHelpers.models.Werker);
       });
       [
         'id',
@@ -146,6 +147,7 @@ describe('Database', () => {
           });
           test('should exist', () => {
             expect(certs).toBeDefined();
+            expect(certs[0]).toBeInstanceOf(dbHelpers.models.Certification);
           });
           test('should have one element', () => {
             expect(certs.length).toEqual(1);
@@ -189,6 +191,7 @@ describe('Database', () => {
           });
           test('should exist', () => {
             expect(positions).toBeDefined();
+            expect(positions[0]).toBeInstanceOf(dbHelpers.models.Position);
           });
           test('should have two positions', () => {
             expect(positions.length).toEqual(2);
@@ -295,8 +298,11 @@ describe('Database', () => {
         expect(dbHelpers.createShift).toBeInstanceOf(Function);
       });
       test('should create a Shift', async () => {
-        console.log(Object.assign(examples.Shift, { MakerId: newMaker.id }));
-        newShift = await dbHelpers.createShift(Object.assign(examples.Shift, { MakerId: newMaker.id }));
+        const shiftTemplate = Object.assign(examples.Shift, newMaker.get('id'));
+        newShift = await dbHelpers.createShift(shiftTemplate);
+        expect(newShift).toBeInstanceOf(dbHelpers.models.Shift);
+      });
+      describe('props', () => {
         [
           'id',
           'name',
@@ -306,7 +312,9 @@ describe('Database', () => {
           'description',
           'start',
           'end',
-        ].forEach(prop => expect(newShift.get(prop)).toBeDefined);
+        ].forEach(prop => test(`should have property ${prop}`, () => {
+          expect(newShift.get(prop)).toBeDefined();
+        }));
       });
     });
   });
