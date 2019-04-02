@@ -37,6 +37,39 @@ const examples = {
     ],
   },
 
+  otherWerker: {
+    access_token: 'oof',
+    refresh_token: 'ow',
+    name_first: 'ouch',
+    name_last: 'exampleName',
+    email: 'me@me.me',
+    url_photo: 'image.svg',
+    bio: 'biooo',
+    phone: '9999999999',
+    last_minute: false,
+    lat: 40.9,
+    long: 40.8,
+    address: '12 example st',
+    certifications: [
+      {
+        cert_name: 'hello',
+        url_Photo: 'image.jpg',
+      },
+      {
+        cert_name: 'safeserv',
+        url_Photo: 'safeserv.bmp',
+      }
+    ],
+    positions: [
+      {
+        position: 'server',
+      },
+      {
+        position: 'host',
+      },
+    ],
+  },
+
   Maker: {
     name: 'jonny restaurant',
     url_photo: 'example.com/image',
@@ -58,6 +91,23 @@ const examples = {
         position: 'host',
         payment_type: 'cash',
         payment_amnt: 5,
+      },
+    ],
+  },
+
+  otherShift: {
+    name: 'good',
+    start: new Date(),
+    end: new Date(),
+    lat: 9,
+    long: 10,
+    address: 'example st',
+    description: 'example',
+    positions: [
+      {
+        position: 'server',
+        payment_amnt: 6,
+        payment_type: 'venmo',
       },
     ],
   },
@@ -351,23 +401,7 @@ describe('Database', () => {
         expect(dbHelpers.getWerkersForShift).toBeInstanceOf(Function);
       });
       test('should fetch werkers if any can apply to a shift based on positions', async () => {
-        const shiftWithServer = await dbHelpers.createShift({
-          MakerId: newMaker.get('id'),
-          name: 'good',
-          start: new Date(),
-          end: new Date(),
-          lat: 9,
-          long: 10,
-          address: 'example st',
-          description: 'example',
-          positions: [
-            {
-              position: 'server',
-              payment_amnt: 6,
-              payment_type: 'venmo',
-            },
-          ],
-        });
+        const shiftWithServer = await dbHelpers.createShift(Object.assign(examples.otherShift, { MakerId: newMaker.get('id') }));
         werkers = await dbHelpers.getWerkersForShift(shiftWithServer.get('id'));
         expect(werkers.length).toBe(1);
       });
