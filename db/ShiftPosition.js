@@ -1,11 +1,9 @@
 module.exports = (sequelize, DataTypes) => {
   const ShiftPosition = sequelize.define('ShiftPosition', {
     id: {
-      type: DataTypes.NUMERIC,
-      allowNull: false,
+      type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
-      defaultValue: 1,
     },
     payment_amnt: { type: DataTypes.NUMERIC, allowNull: false },
     payment_type: { type: DataTypes.STRING, allowNull: false },
@@ -13,9 +11,11 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   ShiftPosition.associate = (models) => {
-    ShiftPosition.belongsTo(models.Shift);
-    ShiftPosition.belongsTo(models.Position);
-    // ShiftPosition.hasOne(models.InviteApply);
+    ShiftPosition.belongsTo(models.Shift, { unique: false });
+    ShiftPosition.belongsTo(models.Position, { unique: false });
+    ShiftPosition.belongsTo(models.Werker, {
+      through: models.InviteApply,
+    });
   };
   return ShiftPosition;
 };
