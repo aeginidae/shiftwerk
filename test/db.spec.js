@@ -1,6 +1,8 @@
 // const SequelizeMock = require('sequelize-mock');
 require('dotenv').config();
 
+jest.setTimeout(30000);
+
 process.env.DBNAME = 'test';
 const dbHelpers = require('../dbHelpers/dbHelpers');
 
@@ -228,7 +230,57 @@ describe('Database', () => {
           ],
         });
         expect(updatedWerker).toBeDefined();
-        console.log(updatedWerker);
+        expect(updatedWerker).not.toEqual(newWerker);
+      });
+      test('should change properties', () => {
+        expect(newWerker.email).not.toEqual(updatedWerker.email);
+      });
+      test('should not change properties', () => {
+        [
+          'name_first',
+          'name_last',
+          'url_photo',
+          'bio',
+          'access_token',
+          'refresh_token',
+          'phone',
+          'id',
+        ].forEach(prop => expect(updatedWerker[prop]).toEqual(newWerker[prop]));
+      });
+      test('should add new certifications', async () => {
+        const certs = await dbHelpers.models.Certification.findAll({
+          include: [
+            {
+              model: dbHelpers.models.Werker,
+              through: {
+                model: dbHelpers.models.WerkerCertification,
+                attributes: ['url_Photo'],
+              },
+              where: {
+                id: updatedWerker.id,
+              },
+            },
+          ],
+        });
+        expect(certs.some(cert => cert.get('cert_name') === 'trash man')).toBeTruthy();
+        expect(certs.some(cert => cert.dataValues.Werkers[0].WerkerCertification.dataValues.url_Photo === 'real cert')).toBeTruthy();
+      });
+      test('should add new positions', async () => {
+        const positions = await dbHelpers.models.Position.findAll({
+          include: [
+            {
+              model: dbHelpers.models.Werker,
+              through: {
+                model: dbHelpers.models.WerkerPosition,
+              },
+              where: {
+                id: updatedWerker.id,
+              },
+            },
+          ],
+        });
+        // positions.forEach(position => console.log(position.get('position')));
+        expect(positions.some(position => position.get('position') === 'dishwasher')).toBeTruthy();
       });
     });
   });
