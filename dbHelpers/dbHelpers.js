@@ -66,40 +66,6 @@ const appendCertsRatingsAndPositionsToWerkers = werkers => Promise.all(werkers.m
     .then(werkerWithCertsAndPositions => addRatingToWerker(werkerWithCertsAndPositions)))));
 
 /**
- * adds any number of certifications to a werker
- *
- * @param {Object} werker - werker model instance
- * @param {Object[]} certifications
- * @param {string} certifications.name
- * @param {string} certifications.url_photo
- */
-const bulkAddCertificationToWerker = (werker, certifications) => Promise.all(certifications
-  .map(certification => db.models.Certification.upsert(certification, { returning: true })
-    // eslint-disable-next-line no-unused-vars
-    .spread(newCert => db.models.WerkerCertification.upsert({
-      WerkerId: werker.id,
-      CertificationId: newCert.id,
-      url_Photo: certification.url_Photo,
-    }, {
-      returning: true,
-    }))))
-  .then(() => werker);
-
-/**
- * adds any number of new positions to db and werker
- *
- * @param {Object} werker - werker model instance
- * @param {Object[]} positions
- * @param {string} positions.position
- */
-const bulkAddPositionToWerker = (werker, positions) => Promise.all(positions
-  .map(position => db.models.Position.upsert(position, { returning: true })
-    .spread((newPosition) => {
-      newPosition.addWerker(werker);
-    })))
-  .then(() => werker);
-
-/**
  * adds new werker to DB, including certifications and positions
  *
  * @param {Object} info
@@ -131,22 +97,7 @@ const addWerker = (info) => {
   return db.models.Werker.upsert(werkerProps, {
     returning: true,
   })
-    .spread(newWerker => Promise.all(
-      info.positions.map(position => db.models.Position.upsert(position, {
-        returning: true,
-      })
-        .spread(newPosition => newWerker.addPosition(newPosition))).concat(
-        info.certifications.map((cert, index) => db.models.Certification.upsert(cert, {
-          returning: true,
-        })
-          .spread(newCert => newWerker.addCertification(newCert, {
-            through: {
-              url_Photo: info.certifications[index].url_Photo,
-            },
-          }))),
-      ),
-    )
-      .then(() => newWerker));
+    .spread(newWerker => newWerker);
 };
 
 /**
@@ -168,22 +119,28 @@ const addWerker = (info) => {
  * @param {number} [info.long]
  * @param {string} [info.address]
  */
-const updateWerker = (werkerId, info) => db.models.Werker.update(info, {
+const updateWerker = (werkerId, info) => db.models.Werker.findOne({
   where: {
     id: werkerId,
   },
-  returning: true,
-})
-  // need to dig into returned data to get at the actual werker
-  .then(([count, [{ dataValues }]]) => {
-    const updatedWerker = dataValues;
-    return Promise.all([
-      bulkAddCertificationToWerker(updatedWerker, info.certifications),
-      bulkAddPositionToWerker(updatedWerker, info.positions),
-    ]);
-  })
-  .then(([updatedWerker]) => updatedWerker)
-  .catch(err => console.error(err));
+}).then(werker => Promise.all([
+  werker.update(info),
+  werker.setCertifications([]),
+  werker.setPositions([]),
+]))
+  .then(([updatedWerker]) => Promise.all(
+    info.certifications.map((cert, index) => db.models.Certification.upsert(cert, {
+      returning: true,
+    }).spread(newCert => updatedWerker.addCertification(newCert, {
+      through: {
+        url_Photo: info.certifications[index].url_Photo,
+      },
+    }))).concat(
+      info.positions.map(position => db.models.Position.upsert(position, {
+        returning: true,
+      }).spread(newPos => updatedWerker.addPosition(newPos))),
+    ),
+  ).then(() => updatedWerker));
 
 /**
  * updates Maker entry in DB
@@ -714,8 +671,6 @@ module.exports = {
   getAllShifts,
   deleteShift,
   addWerker,
-  bulkAddCertificationToWerker,
-  bulkAddPositionToWerker,
   updateWerker,
   updateMaker,
   getWerkersForShift,
