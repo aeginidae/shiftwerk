@@ -345,5 +345,36 @@ describe('Database', () => {
         });
       });
     });
+    describe('getWerkersForShift', () => {
+      let werkers;
+      test('should exist', () => {
+        expect(dbHelpers.getWerkersForShift).toBeInstanceOf(Function);
+      });
+      test('should fetch werkers if any can apply to a shift based on positions', async () => {
+        const shiftWithServer = await dbHelpers.createShift({
+          MakerId: newMaker.get('id'),
+          name: 'good',
+          start: new Date(),
+          end: new Date(),
+          lat: 9,
+          long: 10,
+          address: 'example st',
+          description: 'example',
+          positions: [
+            {
+              position: 'server',
+              payment_amnt: 6,
+              payment_type: 'venmo',
+            },
+          ],
+        });
+        werkers = await dbHelpers.getWerkersForShift(shiftWithServer.get('id'));
+        expect(werkers.length).toBe(1);
+      });
+      test('should not fetch werkers if none can apply to shift based on positions', async () => {
+        werkers = await dbHelpers.getWerkersForShift(newShift.get('id'));
+        expect(werkers.length).toBe(0);
+      });
+    });
   });
 });
