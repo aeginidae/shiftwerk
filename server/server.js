@@ -57,7 +57,7 @@ app.get('/user', (req, res) => {
       .then(werker => res.json(200, werker))
       .catch(err => errorHandler(err));
   }
-  return models.Maker.findById(req.user.id)
+  return models.Maker.findByPk(req.user.id)
     .then(maker => res.status(200).json(maker))
     .catch(err => errorHandler(err));
 });
