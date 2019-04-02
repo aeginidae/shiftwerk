@@ -13,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
   Shift.associate = (models) => {
     Shift.belongsTo(models.Maker);
     Shift.belongsToMany(models.Werker, {
-      through: 'WerkerShift',
+      through: models.Rating,
     });
     Shift.belongsToMany(models.Position, {
       through: models.ShiftPosition,

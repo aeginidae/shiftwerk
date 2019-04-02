@@ -11,5 +11,11 @@ module.exports = (sequelize, DataTypes) => {
     bio: DataTypes.STRING,
   });
 
+  Maker.associations = (models) => {
+    Maker.belongsToMany(models.Werker, {
+      through: models.Favorite,
+    });
+  };
+
   return Maker;
 };
