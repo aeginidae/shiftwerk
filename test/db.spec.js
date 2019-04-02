@@ -288,13 +288,25 @@ describe('Database', () => {
   describe('Shift', () => {
     beforeAll(async () => {
       newMaker = await dbHelpers.models.Maker.create(examples.Maker);
-      newShift = await dbHelpers.createShift(Object.assign(examples.Shift, { MakerId: newMaker.get('id') }));
-      console.log(newMaker, newShift);
     });
     describe('createShift', () => {
       test('should exist', () => {
         expect(dbHelpers.createShift).toBeDefined();
         expect(dbHelpers.createShift).toBeInstanceOf(Function);
+      });
+      test('should create a Shift', async () => {
+        console.log(Object.assign(examples.Shift, { MakerId: newMaker.id }));
+        newShift = await dbHelpers.createShift(Object.assign(examples.Shift, { MakerId: newMaker.id }));
+        [
+          'id',
+          'name',
+          'address',
+          'lat',
+          'long',
+          'description',
+          'start',
+          'end',
+        ].forEach(prop => expect(newShift.get(prop)).toBeDefined);
       });
     });
   });
