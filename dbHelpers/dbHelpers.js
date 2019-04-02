@@ -430,14 +430,12 @@ const createShift = ({
 
 const applyOrInviteForShift = (shiftId, werkerId, positionName, inviteOrApply) => db.sequelize.query(`
 SELECT sp.id FROM "ShiftPositions" sp INNER JOIN "Positions" p ON p.id=sp."PositionId" INNER JOIN "Shifts" s ON s.id=sp."ShiftId" WHERE p.position='${positionName}' AND s.id=${shiftId}`)
-  .spread((shiftPositions) => {
-    return db.sequelize.query(`
+  .spread(shiftPositions => db.sequelize.query(`
 INSERT INTO "InviteApplies" ("WerkerId",
 "ShiftPositionId", 
 "createdAt", 
 "updatedAt",
-"type") VALUES (${werkerId}, ${shiftPositions[0].id}, 'now', 'now', '${inviteOrApply}')`);
-  });
+"type") VALUES (${werkerId}, ${shiftPositions[0].id}, 'now', 'now', '${inviteOrApply}')`));
 
 /**
  * Function used to accept shifts - updates the shift status to 'accept' or 'decline'
