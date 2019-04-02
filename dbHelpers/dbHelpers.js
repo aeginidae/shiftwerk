@@ -382,7 +382,9 @@ const bulkAddNewPositionsToShift = (shift, positions) => Promise.all(positions
       payment_type: position.payment_type,
     }, {
       returning: true,
-    }))));
+    }))))
+  .then(() => shift);
+
 /**
  * Function used to create a new shift
  * @param {string} name - the name of the shift
