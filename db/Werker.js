@@ -20,8 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     Werker.belongsToMany(models.Position, {
       through: 'WerkerPosition',
     });
-    Werker.belongsToMany(models.Shift, {
-      through: 'WerkerShift',
+    Werker.belongsToMany(models.ShiftPosition, {
+      through: 'InviteApply',
     });
     Werker.belongsToMany(models.Certification, {
       through: models.WerkerCertification,
