@@ -39,7 +39,7 @@ const examples = {
 
   Maker: {
     name: 'jonny restaurant',
-    urlPhoto: 'example.com/image',
+    url_photo: 'example.com/image',
     phone: '5555555555',
     email: 'example@example.com',
     bio: 'example bio',
@@ -73,6 +73,8 @@ const examples = {
 
 describe('Database', () => {
   let newWerker;
+  let newShift;
+  let newMaker;
   beforeAll(async () => {
     await Promise.all([
       'Werker',
@@ -280,6 +282,19 @@ describe('Database', () => {
           ],
         });
         expect(positions.some(position => position.get('position') === 'dishwasher')).toBeTruthy();
+      });
+    });
+  });
+  describe('Shift', () => {
+    beforeAll(async () => {
+      newMaker = await dbHelpers.models.Maker.create(examples.Maker);
+      newShift = await dbHelpers.createShift(Object.assign(examples.Shift, { MakerId: newMaker.get('id') }));
+      console.log(newMaker, newShift);
+    });
+    describe('createShift', () => {
+      test('should exist', () => {
+        expect(dbHelpers.createShift).toBeDefined();
+        expect(dbHelpers.createShift).toBeInstanceOf(Function);
       });
     });
   });
