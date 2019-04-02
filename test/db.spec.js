@@ -272,14 +272,13 @@ describe('Database', () => {
               model: dbHelpers.models.Werker,
               through: {
                 model: dbHelpers.models.WerkerPosition,
-              },
-              where: {
-                id: updatedWerker.id,
+                where: {
+                  WerkerId: updatedWerker.id,
+                },
               },
             },
           ],
         });
-        // positions.forEach(position => console.log(position.get('position')));
         expect(positions.some(position => position.get('position') === 'dishwasher')).toBeTruthy();
       });
     });
