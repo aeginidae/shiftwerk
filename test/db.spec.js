@@ -55,7 +55,7 @@ const examples = {
     description: 'example event',
     positions: [
       {
-        position: 'server',
+        position: 'host',
         payment_type: 'cash',
         payment_amnt: 5,
       },
@@ -315,6 +315,17 @@ describe('Database', () => {
         ].forEach(prop => test(`should have property ${prop}`, () => {
           expect(newShift.get(prop)).toBeDefined();
         }));
+      });
+      describe('ShiftPositions', () => {
+        test('should create new Positions', async () => {
+          const position = await dbHelpers.models.Position.findOne({
+            where: {
+              position: examples.Shift.positions[0].position,
+            },
+          });
+          expect(position).toBeDefined();
+          expect(position).toBeInstanceOf(dbHelpers.models.Position);
+        });
       });
     });
   });
