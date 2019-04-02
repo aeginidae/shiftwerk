@@ -131,20 +131,22 @@ const addWerker = (info) => {
   return db.models.Werker.upsert(werkerProps, {
     returning: true,
   })
-    .catch((err) => {
-      if (err.message === 'Validation error') {
-        return db.models.Werker.upsert(werkerProps,
-          {
-            returning: true,
-          });
-      }
-      return new Error('Something went wrong');
-    })
-    .spread(newWerker => Promise.all([
-      bulkAddCertificationToWerker(newWerker, info.certifications),
-      bulkAddPositionToWerker(newWerker, info.positions),
-    ]))
-    .then(([newWerker]) => newWerker);
+    .spread(newWerker => Promise.all(
+      info.positions.map(position => db.models.Position.upsert(position, {
+        returning: true,
+      })
+        .spread(newPosition => newWerker.addPosition(newPosition))).concat(
+        info.certifications.map((cert, index) => db.models.Certification.upsert(cert, {
+          returning: true,
+        })
+          .spread(newCert => newWerker.addCertification(newCert, {
+            through: {
+              url_Photo: info.certifications[index].url_Photo,
+            },
+          }))),
+      ),
+    )
+      .then(() => newWerker));
 };
 
 /**
