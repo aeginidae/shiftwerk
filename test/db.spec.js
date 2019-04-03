@@ -110,6 +110,7 @@ const examples = {
 describe('Database', () => {
   let newWerker;
   let newShift;
+  let shiftWithServer;
   let newMaker;
   beforeAll(async () => {
     await Promise.all([
@@ -174,6 +175,9 @@ describe('Database', () => {
             positions: [
               {
                 position: 'dishwasher',
+              },
+              {
+                position: 'server',
               },
             ],
           });
@@ -247,10 +251,10 @@ describe('Database', () => {
               expect(positions[0]).toBeInstanceOf(dbHelpers.models.Position);
             });
             test('should have two positions', () => {
-              expect(positions.length).toEqual(1);
+              expect(positions.length).toEqual(2);
             });
             test('should have attribute position', () => {
-              expect(position.get('position')).toBe('dishwasher');
+              expect(['dishwasher', 'server']).toContain(position.get('position'));
             });
             describe('WerkerPosition', () => {
               test('should share WerkerId with werker', () => {
@@ -328,7 +332,7 @@ describe('Database', () => {
         expect(dbHelpers.getWerkersForShift).toBeInstanceOf(Function);
       });
       test('should fetch werkers if any can apply to a shift based on positions', async () => {
-        const shiftWithServer = await dbHelpers.createShift(Object.assign(examples.otherShift, { MakerId: newMaker.get('id') }));
+        shiftWithServer = await dbHelpers.createShift(Object.assign(examples.otherShift, { MakerId: newMaker.get('id') }));
         werkers = await dbHelpers.getWerkersForShift(shiftWithServer.get('id'));
         expect(werkers.length).toBe(1);
       });
@@ -342,52 +346,7 @@ describe('Database', () => {
         expect(dbHelpers.applyOrInviteForShift).toBeInstanceOf(Function);
       });
       test('should invite a werker to a shift', async () => {
-        const position = await dbHelpers.models.Position.findOne({
-          where: {
-            position: 'host',
-          },
-        });
-        const addedPosition = await newShift.setPositions(position, {
-          through: {
-            payment_type: 'cash',
-            payment_amnt: 20,
-          },
-        });
-        console.log(addedPosition);
-        const shift = await dbHelpers.models.Shift.findOne({
-          include: [
-            {
-              model: dbHelpers.models.Position,
-              where: {
-                position: 'host',
-              },
-            },
-          ],
-        });
-        console.log(shift);
-        // const shiftPosition = await dbHelpers.models.Position.findOne({
-        //   attributes: ['position'],
-        //   include: [
-        //     {
-        //       model: dbHelpers.models.Shift,
-        //       through: {
-        //         model: dbHelpers.models.ShiftPosition,
-        //         attributes: ['filled', 'payment_type', 'payment_amnt'],
-        //         where: {
-        //           ShiftId: newShift.get('id'),
-        //         },
-        //       },
-        //       attributes: ['id', 'name'],
-        //     },
-        //   ],
-        //   where: {
-        //     position: 'host',
-        //   },
-        // });
-        // console.log(shiftPosition);
-        const otherWerker = await dbHelpers.addWerker(examples.otherWerker);
-        console.log(newShift.get('id'));
-        const invitation = await dbHelpers.applyOrInviteForShift(newShift.get('id'), otherWerker.get('id'), 'host', 'invite');
+        const invitation = await dbHelpers.applyOrInviteForShift(shiftWithServer.get('id'), newWerker.get('id'), 'server', 'invite');
         console.log(invitation);
         expect(invitation).toBeDefined();
       });
